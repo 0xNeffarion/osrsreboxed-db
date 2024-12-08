@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import json
 import argparse
+import traceback
 from pathlib import Path
 
 import config
@@ -65,37 +66,42 @@ class Builder:
         self.known_monsters = list()
 
     def run(self):
-        # Start processing every monster!
-        for monster_id in self.all_monster_cache_data:
+        try:
+            # Start processing every monster!
+            for monster_id in self.all_monster_cache_data:
 
-            # if int(monster_id) < 11000:
-            #     continue
+                # if int(monster_id) < 11000:
+                #     continue
 
-            # Initialize the BuildMonster class, used for all monsters
-            builder = build_monster.BuildMonster(monster_id=monster_id,
-                                                 all_monster_cache_data=self.all_monster_cache_data,
-                                                 all_db_monsters=self.all_db_monsters,
-                                                 all_wikitext_raw=self.all_wikitext_raw,
-                                                 all_wikitext_processed=self.all_wikitext_processed,
-                                                 monsters_drops=self.monsters_drops,
-                                                 schema_data=self.schema_data,
-                                                 known_monsters=self.known_monsters,
-                                                 verbose=self.verbose)
+                # Initialize the BuildMonster class, used for all monsters
+                builder = build_monster.BuildMonster(monster_id=monster_id,
+                                                     all_monster_cache_data=self.all_monster_cache_data,
+                                                     all_db_monsters=self.all_db_monsters,
+                                                     all_wikitext_raw=self.all_wikitext_raw,
+                                                     all_wikitext_processed=self.all_wikitext_processed,
+                                                     monsters_drops=self.monsters_drops,
+                                                     schema_data=self.schema_data,
+                                                     known_monsters=self.known_monsters,
+                                                     verbose=self.verbose)
 
-            status = builder.preprocessing()
-            if status:
-                builder.populate_monster()
-                known_monster = builder.check_duplicate_monster()
-                self.known_monsters.append(known_monster)
-                builder.populate_monster_drops()
-                if self.compare:
-                    builder.compare_new_vs_old_monster()
-                if self.export:
-                    builder.export_monster_to_json()
-                if self.validate:
-                    builder.validate_monster()
-
+                status = builder.preprocessing()
+                if status:
+                    builder.populate_monster()
+                    known_monster = builder.check_duplicate_monster()
+                    self.known_monsters.append(known_monster)
+                    builder.populate_monster_drops()
+                    if self.compare:
+                        builder.compare_new_vs_old_monster()
+                    if self.export:
+                        builder.export_monster_to_json()
+                    if self.validate:
+                        builder.validate_monster()
         # Done processing, rejoice!
+
+        except Exception:
+            print("Ran into issue parsing item.")
+            print(traceback.format_exc())
+        # Start processing every item!
         print("Built.")
         exit(0)
 

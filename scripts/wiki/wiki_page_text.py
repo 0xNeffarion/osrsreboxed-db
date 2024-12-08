@@ -64,7 +64,7 @@ class WikiPageText:
                 break
             except requests.exceptions.RequestException as e:
                 raise SystemExit(">>> ERROR: Get request error. Exiting.") from e
-            except:
+            except Exception:
                 print(">>> ERROR: Probably cloudflare 520")
 
         try:

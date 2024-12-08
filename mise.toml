@@ -1,12 +1,60 @@
 [tools]
 java = "openjdk"
 python = "3"
+uv = "latest"
+
+[env]
+PYTHONPATH = "{{cwd}}"
+
+[tasks.project]
+description = "Pulls the latest from git"
+run = """
+git pull
+git submodule update --recursive --remote
+"""
 
 [tasks.cache]
 description = "Grab the cache"
+# depends = ['project']
 run = """
 #!/usr/bin/env bash
 wget https://github.com/abextm/osrs-cache/releases/download/2024-12-04-rev227/dump-2024-12-04-rev227.tar.gz
 tar -xzvf dump-2024-12-04-rev227.tar.gz -C data/cache --strip-components=1
 rm dump-2024-12-04-rev227.tar.gz
+"""
+
+[tasks.data]
+description = "data"
+# depends = ['cache']
+run = """
+#!/usr/bin/env bash
+python scripts/cache/update.py
+python scripts/items/update.py
+python scripts/icons/update_icons.py
+python scripts/icons/convert_item_icons.py
+python scripts/monsters/update.py
+"""
+
+[tasks.builders]
+description = "Runs both builders at once"
+depends = ['monsters', 'items']
+
+[tasks.monsters]
+description = "Run monsters builders"
+# depends = ['data']
+run = """
+#!/usr/bin/env bash
+rm -r {{cwd}}/docs/monsters-json/
+mkdir {{cwd}}/docs/monsters-json/
+python builders/monsters/builder.py --export=True
+"""
+
+[tasks.items]
+description = "Run items builders"
+# depends = ['data']
+run = """
+#!/usr/bin/env bash
+rm -r {{cwd}}/docs/items-json/
+mkdir {{cwd}}/docs/items-json/
+python builders/items/builder.py --export=True
 """
