@@ -92,9 +92,9 @@ class Builder:
         self.known_items = list()
 
     def run(self):
-        try:
-            for item_id in self.all_items_cache_data:
-
+        # Start processing every item!
+        for item_id in self.all_items_cache_data:
+            try:
                 # if int(item_id) < 25800:
                 #     continue
 
@@ -135,59 +135,59 @@ class Builder:
                 if self.validate:
                     builder.validate_item()
 
-            # Done processing, rejoice!
-        except Exception:
-            print("Ran into issue parsing item.")
-            print(traceback.format_exc())
-        # Start processing every item!
+            except Exception:
+                print("Ran into issue parsing item.")
+                print(traceback.format_exc())
+        # Done processing, rejoice!
         print("Built.")
         exit(0)
 
-    def test(self):
-        # Start processing every item!
-        for item_id in self.all_items_cache_data:
 
-            #if int(item_id) < 25800:
-             #   continue
+def test(self):
+    # Start processing every item!
+    for item_id in self.all_items_cache_data:
 
-            # Skip any beta items
-            if "(beta" in self.all_items_cache_data[item_id]["name"]:
-                continue
+        # if int(item_id) < 25800:
+        #   continue
 
-            if "(null)" in self.all_items_cache_data[item_id]["name"]:
-                continue
+        # Skip any beta items
+        if "(beta" in self.all_items_cache_data[item_id]["name"]:
+            continue
 
-            # Initialize the BuildItem class, used for all items
-            builder = build_item.BuildItem(item_id=item_id,
-                                           all_items_cache_data=self.all_items_cache_data,
-                                           all_db_items=self.all_db_items,
-                                           all_wikitext_raw=self.all_wikitext_raw,
-                                           all_wikitext_processed=self.all_wikitext_processed,
-                                           unalchable=self.unalchable,
-                                           buy_limits=self.buy_limits,
-                                           skill_requirements=self.skill_requirements,
-                                           weapon_stances=self.weapon_stances,
-                                           icons=self.icons,
-                                           duplicates=self.duplicates,
-                                           schema_data=self.schema_data,
-                                           known_items=self.known_items,
-                                           verbose=self.verbose)
+        if "(null)" in self.all_items_cache_data[item_id]["name"]:
+            continue
 
-            status = builder.preprocessing()
+        # Initialize the BuildItem class, used for all items
+        builder = build_item.BuildItem(item_id=item_id,
+                                       all_items_cache_data=self.all_items_cache_data,
+                                       all_db_items=self.all_db_items,
+                                       all_wikitext_raw=self.all_wikitext_raw,
+                                       all_wikitext_processed=self.all_wikitext_processed,
+                                       unalchable=self.unalchable,
+                                       buy_limits=self.buy_limits,
+                                       skill_requirements=self.skill_requirements,
+                                       weapon_stances=self.weapon_stances,
+                                       icons=self.icons,
+                                       duplicates=self.duplicates,
+                                       schema_data=self.schema_data,
+                                       known_items=self.known_items,
+                                       verbose=self.verbose)
 
-            if status["status"]:
-                builder.populate_wiki_item()
-            else:
-                builder.populate_non_wiki_item()
+        status = builder.preprocessing()
 
-            known_item = builder.check_duplicate_item()
-            if known_item:
-                self.known_items.append(known_item)
-            builder.validate_item()
+        if status["status"]:
+            builder.populate_wiki_item()
+        else:
+            builder.populate_non_wiki_item()
 
-        # Done testing, rejoice!
-        print("Tested.")
-        exit(0)
+        known_item = builder.check_duplicate_item()
+        if known_item:
+            self.known_items.append(known_item)
+        builder.validate_item()
+
+    # Done testing, rejoice!
+    print("Tested.")
+    exit(0)
 
 
 if __name__ == "__main__":
