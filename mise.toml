@@ -11,21 +11,20 @@ description = "Pulls the latest from git"
 run = """
 git pull
 git submodule update --recursive --remote
+uv sync
 """
 
 [tasks.cache]
 description = "Grab the cache"
-# depends = ['project']
+depends = ['project']
 run = """
 #!/usr/bin/env bash
-wget https://github.com/abextm/osrs-cache/releases/download/2024-12-04-rev227/dump-2024-12-04-rev227.tar.gz
-tar -xzvf dump-2024-12-04-rev227.tar.gz -C data/cache --strip-components=1
-rm dump-2024-12-04-rev227.tar.gz
+python scripts/cache/download_cache.py
 """
 
 [tasks.data]
 description = "data"
-# depends = ['cache']
+depends = ['cache']
 run = """
 #!/usr/bin/env bash
 python scripts/cache/update.py
@@ -41,7 +40,7 @@ depends = ['monsters', 'items']
 
 [tasks.monsters]
 description = "Run monsters builders"
-# depends = ['data']
+depends = ['data']
 run = """
 #!/usr/bin/env bash
 rm -r {{cwd}}/docs/monsters-json/
@@ -51,10 +50,18 @@ python builders/monsters/builder.py --export=True
 
 [tasks.items]
 description = "Run items builders"
-# depends = ['data']
+depends = ['data']
 run = """
 #!/usr/bin/env bash
 rm -r {{cwd}}/docs/items-json/
 mkdir {{cwd}}/docs/items-json/
 python builders/items/builder.py --export=True
+"""
+
+[tasks.update]
+description = "Updates the JSON files"
+depends = ['builders']
+run = """
+#!/usr/bin/env bash
+python scripts/update/update_json_files.py
 """
