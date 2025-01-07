@@ -1,0 +1,68 @@
+[tools]
+java = "openjdk"
+python = "3"
+uv = "latest"
+
+[env]
+PYTHONPATH = "{{cwd}}"
+
+[tasks.project]
+description = "Pulls the latest from git"
+run = """
+#!/usr/bin/env bash
+git pull
+git submodule update --recursive --remote
+uv sync
+"""
+
+[tasks.cache]
+description = "Grab the cache"
+depends = ['project']
+run = """
+#!/usr/bin/env bash
+python scripts/cache/download_cache.py
+"""
+
+[tasks.data]
+description = "data"
+depends = ['cache']
+run = """
+#!/usr/bin/env bash
+python scripts/cache/update.py
+python scripts/items/update.py
+python scripts/icons/update_icons.py
+python scripts/icons/convert_item_icons.py
+python scripts/monsters/update.py
+"""
+
+[tasks.builders]
+description = "Runs both builders at once"
+depends = ['monsters', 'items']
+
+[tasks.monsters]
+description = "Run monsters builders"
+depends = ['data']
+run = """
+#!/usr/bin/env bash
+rm -r {{cwd}}/docs/monsters-json/
+mkdir {{cwd}}/docs/monsters-json/
+python builders/monsters/builder.py --export=True
+"""
+
+[tasks.items]
+description = "Run items builders"
+depends = ['data']
+run = """
+#!/usr/bin/env bash
+rm -r {{cwd}}/docs/items-json/
+mkdir {{cwd}}/docs/items-json/
+python builders/items/builder.py --export=True
+"""
+
+[tasks.update]
+description = "Updates the JSON files"
+depends = ['builders']
+run = """
+#!/usr/bin/env bash
+python scripts/update/update_json_files.py
+"""

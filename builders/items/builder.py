@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 import json
 import argparse
+import traceback
 from pathlib import Path
 
 import config
@@ -93,65 +94,69 @@ class Builder:
     def run(self):
         # Start processing every item!
         for item_id in self.all_items_cache_data:
+            try:
+                # if int(item_id) < 25800:
+                #     continue
 
-            # if int(item_id) < 25800:
-            #     continue
+                # Skip any beta items
+                if "(beta" in self.all_items_cache_data[item_id]["name"]:
+                    continue
 
-            # Skip any beta items
-            if "(beta" in self.all_items_cache_data[item_id]["name"]:
-                continue
+                # Initialize the BuildItem class, used for all items
+                builder = build_item.BuildItem(item_id=item_id,
+                                               all_items_cache_data=self.all_items_cache_data,
+                                               all_db_items=self.all_db_items,
+                                               all_wikitext_raw=self.all_wikitext_raw,
+                                               all_wikitext_processed=self.all_wikitext_processed,
+                                               unalchable=self.unalchable,
+                                               buy_limits=self.buy_limits,
+                                               skill_requirements=self.skill_requirements,
+                                               weapon_stances=self.weapon_stances,
+                                               icons=self.icons,
+                                               duplicates=self.duplicates,
+                                               schema_data=self.schema_data,
+                                               known_items=self.known_items,
+                                               verbose=self.verbose)
 
-            # Initialize the BuildItem class, used for all items
-            builder = build_item.BuildItem(item_id=item_id,
-                                           all_items_cache_data=self.all_items_cache_data,
-                                           all_db_items=self.all_db_items,
-                                           all_wikitext_raw=self.all_wikitext_raw,
-                                           all_wikitext_processed=self.all_wikitext_processed,
-                                           unalchable=self.unalchable,
-                                           buy_limits=self.buy_limits,
-                                           skill_requirements=self.skill_requirements,
-                                           weapon_stances=self.weapon_stances,
-                                           icons=self.icons,
-                                           duplicates=self.duplicates,
-                                           schema_data=self.schema_data,
-                                           known_items=self.known_items,
-                                           verbose=self.verbose)
+                status = builder.preprocessing()
 
-            status = builder.preprocessing()
+                if status["status"]:
+                    builder.populate_wiki_item()
+                else:
+                    builder.populate_non_wiki_item()
 
-            if status["status"]:
-                builder.populate_wiki_item()
-            else:
-                builder.populate_non_wiki_item()
+                known_item = builder.check_duplicate_item()
+                if known_item:
+                    self.known_items.append(known_item)
+                if self.compare:
+                    builder.compare_new_vs_old_item()
+                if self.export:
+                    builder.export_item_to_json()
+                if self.validate:
+                    builder.validate_item()
 
-            known_item = builder.check_duplicate_item()
-            if known_item:
-                self.known_items.append(known_item)
-            if self.compare:
-                builder.compare_new_vs_old_item()
-            if self.export:
-                builder.export_item_to_json()
-            if self.validate:
-                builder.validate_item()
-
+            except Exception:
+                print("Ran into issue parsing item.")
+                print(traceback.format_exc())
         # Done processing, rejoice!
         print("Built.")
         exit(0)
 
+
     def test(self):
         # Start processing every item!
         for item_id in self.all_items_cache_data:
-
-            #if int(item_id) < 25800:
-             #   continue
-
+        
+            # if int(item_id) < 25800:
+            #   continue
+    
             # Skip any beta items
             if "(beta" in self.all_items_cache_data[item_id]["name"]:
                 continue
-
+            
             if "(null)" in self.all_items_cache_data[item_id]["name"]:
                 continue
-
+            
             # Initialize the BuildItem class, used for all items
             builder = build_item.BuildItem(item_id=item_id,
                                            all_items_cache_data=self.all_items_cache_data,
@@ -167,19 +172,19 @@ class Builder:
                                            schema_data=self.schema_data,
                                            known_items=self.known_items,
                                            verbose=self.verbose)
-
+    
             status = builder.preprocessing()
-
+    
             if status["status"]:
                 builder.populate_wiki_item()
             else:
                 builder.populate_non_wiki_item()
-
+    
             known_item = builder.check_duplicate_item()
             if known_item:
                 self.known_items.append(known_item)
             builder.validate_item()
-
+    
         # Done testing, rejoice!
         print("Tested.")
         exit(0)

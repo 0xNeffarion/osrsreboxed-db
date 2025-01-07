@@ -530,7 +530,7 @@ class BuildItem:
                 self.item_dict["weapon"]["stances"] = self.weapon_stances[weapon_type]
             except KeyError:
                 print("populate_from_wiki_data_equipment: Weapon type error 1 | " + weapon_type)
-                exit(1)
+                raise
 
         else:
             # No combatstyles infobox, try get data from bonuses
